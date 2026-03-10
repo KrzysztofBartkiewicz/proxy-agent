@@ -102,6 +102,8 @@ fs.createReadStream('people.csv')
           answer: finalOutput
         }
 
+        console.log(finalOutput)
+
         const send = async () => {
           const verifyResponse = await fetch('https://hub.ag3nts.org/verify', {
             method: 'POST',

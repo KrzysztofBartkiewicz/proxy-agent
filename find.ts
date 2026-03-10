@@ -3,7 +3,14 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const locationApi = 'https://hub.ag3nts.org/api/location'
-const suspects = [
+const suspects: {
+  name: string
+  surname: string
+  gender: string
+  born: number
+  city: string
+  tags: string[]
+}[] = [
   {
     name: 'Cezary',
     surname: 'Żurek',
@@ -48,12 +55,14 @@ const suspects = [
 
 const locations = JSON.parse(fs.readFileSync('./findhim_locations.json', 'utf-8'))
 const locationValues = { ...locations.power_plants }
-const plants = Object.entries(locationValues).map(([key, value]) => ({
+const plants = Object.entries(locationValues).map(([key, value]: [string, any]) => ({
   city: key,
-  code: value.code
+  code: value.code,
+  latitude: 0,
+  longitude: 0
 }))
 
-async function geocodeCity(city) {
+async function geocodeCity(city: string) {
   const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
     city + ', Poland'
   )}&format=jsonv2&limit=5`
@@ -72,7 +81,7 @@ async function geocodeCity(city) {
   }
 }
 
-function distanceInKm(lat1, lon1, lat2, lon2) {
+function distanceInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371
 
   const dLat = ((lat2 - lat1) * Math.PI) / 180
@@ -97,8 +106,6 @@ for (const plant of plants) {
   await new Promise(r => setTimeout(r, 1100))
 }
 
-console.log(plants)
-
 const suspectsPromises = suspects.map(({ name, surname }) => {
   return fetch(locationApi, {
     method: 'POST',
@@ -119,18 +126,18 @@ Promise.all(suspectsPromises)
     const mappedLocations = res.map((location, i) => {
       return {
         person: { name: suspects[i].name, surname: suspects[i].surname, born: suspects[i].born },
-        locations: location.map(({ latitude, longitude }) => {
-          return {
+        locations: location.map(
+          ({ latitude, longitude }: { latitude: number; longitude: number }) => ({
             latitude,
             longitude
-          }
-        })
+          })
+        )
       }
     })
 
     let bestDistance = Infinity
-    let bestPerson = null
-    let bestPlant = null
+    let bestPerson: { name: string; surname: string; born: number } | null = null
+    let bestPlant: (typeof plants)[0] | null = null
 
     for (const suspect of mappedLocations) {
       for (const location of suspect.locations) {
@@ -149,6 +156,11 @@ Promise.all(suspectsPromises)
           }
         }
       }
+    }
+
+    if (!bestPerson || !bestPlant) {
+      console.error('No suspect or plant found')
+      return
     }
 
     let accessLevel
@@ -199,5 +211,5 @@ Promise.all(suspectsPromises)
 
     send()
 
-    console.log({ bestDistance, bestPerson, bestPlant })
+    console.log({ bestDistance, bestPerson, bestPlant, accessLevel })
   })

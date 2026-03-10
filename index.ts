@@ -4,8 +4,8 @@ import { parseISO } from 'date-fns'
 import dotenv from 'dotenv'
 dotenv.config()
 
-const results = []
-const finalResults = []
+const results: Record<string, string>[] = []
+const finalResults: { id: number; job: string }[] = []
 
 let recordsJson
 
@@ -82,9 +82,11 @@ fs.createReadStream('people.csv')
           .trim()
         const parsedResponse = JSON.parse(jsonResponse)
 
-        const withTransportTag = parsedResponse.filter(record => record.tags.includes('transport'))
+        const withTransportTag = parsedResponse.filter((record: { id: number; tags: string[] }) =>
+          record.tags.includes('transport')
+        )
 
-        const finalOutput = withTransportTag.map(record => {
+        const finalOutput = withTransportTag.map((record: { id: number; tags: string[] }) => {
           const originalRecord = results[record.id - 1]
           return {
             name: originalRecord.name,

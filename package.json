@@ -1,0 +1,21 @@
+{
+  "name": "ai-devs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "csv-parser": "^3.2.0",
+    "date-fns": "^4.1.0",
+    "dotenv": "^17.3.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.1"
+  }
+}

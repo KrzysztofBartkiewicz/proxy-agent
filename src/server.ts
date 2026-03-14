@@ -20,13 +20,14 @@ app.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Missing sessionID or msg' })
   }
 
-  if (!sessions.has(sessionID)) {
-    sessions.set(sessionID, [])
-  }
-
+  // obsługa DISCONNECT najpierw
   if (msg === 'DISCONNECT') {
     sessions.delete(sessionID)
     return res.json({ msg: 'OK' })
+  }
+
+  if (!sessions.has(sessionID)) {
+    sessions.set(sessionID, [])
   }
 
   const history = sessions.get(sessionID)

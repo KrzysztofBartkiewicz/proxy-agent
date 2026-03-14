@@ -196,6 +196,8 @@ Promise.all(suspectsPromises)
       }
     }
 
+    console.log('payload', payload)
+
     const send = async () => {
       const verifyResponse = await fetch('https://hub.ag3nts.org/verify', {
         method: 'POST',
@@ -209,7 +211,7 @@ Promise.all(suspectsPromises)
       console.log(verifyData)
     }
 
-    send()
+    // send()
 
     console.log({ bestDistance, bestPerson, bestPlant, accessLevel })
   })

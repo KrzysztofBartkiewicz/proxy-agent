@@ -11,6 +11,8 @@ const sessions = new Map<string, ChatMessage[]>()
 const app = express()
 app.use(express.json())
 
+const port = Number(process.env.PORT) || 3000
+
 app.post('/', async (req, res) => {
   const { sessionID, msg } = req.body as { sessionID: string; msg: string }
 
@@ -37,8 +39,8 @@ app.post('/', async (req, res) => {
   return res.json({ msg: reply })
 })
 
-app.listen(3000, () => {
-  console.log('Server is running on port 3000')
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`)
 })
 
 app.get('/', (req, res) => {

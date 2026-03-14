@@ -24,6 +24,11 @@ app.post('/', async (req, res) => {
     sessions.set(sessionID, [])
   }
 
+  if (msg === 'DISCONNECT') {
+    sessions.delete(sessionID)
+    return res.json({ msg: 'OK' })
+  }
+
   const history = sessions.get(sessionID)
 
   if (!history) {

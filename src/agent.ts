@@ -18,19 +18,26 @@ export async function runAgent(history: ChatMessage[]): Promise<string> {
 
     const { id, name, arguments: args } = modelResponse
 
+    console.log('Tool args:', JSON.stringify(args, null, 2))
+
     if (name === 'check_package') {
-      if (!args || typeof args.id !== 'string') {
+      if (!args || typeof args.packageid !== 'string') {
         return 'Invalid arguments for check_package'
       }
     }
 
     if (name === 'redirect_package') {
-      if (!args || typeof args.id !== 'string' || typeof args.city !== 'string') {
+      if (
+        !args ||
+        typeof args.packageid !== 'string' ||
+        typeof args.destination !== 'string' ||
+        typeof args.code !== 'string'
+      ) {
         return 'Invalid arguments for redirect_package'
       }
     }
 
-    const tool = tools[name]
+    const tool = tools[name as keyof typeof tools]
 
     if (!tool) {
       return `Unknown tool: ${name}`

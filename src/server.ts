@@ -52,3 +52,7 @@ app.listen(port, () => {
 app.get('/', (req, res) => {
   res.send('Server alive')
 })
+
+app.post('/', async (req, res) => {
+  console.log('Incoming request:', req.body)
+})

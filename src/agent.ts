@@ -4,7 +4,11 @@ import { ChatMessage } from './types.js'
 
 const MAX_STEPS = 5
 
-export async function runAgent(history: ChatMessage[]): Promise<string> {
+export async function runAgent(
+  inputHistory: ChatMessage[]
+): Promise<{ reply: string; updatedHistory: ChatMessage[] }> {
+  const history: ChatMessage[] = [...inputHistory]
+
   for (let step = 0; step < MAX_STEPS; step++) {
     console.log('Agent step:', step)
     console.log('History before LLM:', JSON.stringify(history, null, 2))
@@ -13,16 +17,22 @@ export async function runAgent(history: ChatMessage[]): Promise<string> {
     console.log('Model response:', JSON.stringify(modelResponse, null, 2))
 
     if (modelResponse.type === 'final') {
-      return modelResponse.content
+      const finalMessage: ChatMessage = {
+        role: 'assistant',
+        content: modelResponse.content
+      }
+
+      return {
+        reply: modelResponse.content,
+        updatedHistory: [...history, finalMessage]
+      }
     }
 
     const { id, name, arguments: args } = modelResponse
 
-    console.log('Tool args:', JSON.stringify(args, null, 2))
-
     if (name === 'check_package') {
       if (!args || typeof args.packageid !== 'string') {
-        return 'Invalid arguments for check_package'
+        throw new Error('Invalid arguments for check_package')
       }
     }
 
@@ -33,17 +43,17 @@ export async function runAgent(history: ChatMessage[]): Promise<string> {
         typeof args.destination !== 'string' ||
         typeof args.code !== 'string'
       ) {
-        return 'Invalid arguments for redirect_package'
+        throw new Error('Invalid arguments for redirect_package')
       }
     }
 
     const tool = tools[name as keyof typeof tools]
 
     if (!tool) {
-      return `Unknown tool: ${name}`
+      throw new Error(`Unknown tool: ${name}`)
     }
 
-    history.push({
+    const assistantToolCallMessage: ChatMessage = {
       role: 'assistant',
       content: '',
       tool_calls: [
@@ -56,16 +66,20 @@ export async function runAgent(history: ChatMessage[]): Promise<string> {
           }
         }
       ]
-    })
+    }
+
+    history.push(assistantToolCallMessage)
 
     const result = await tool(args)
 
-    history.push({
+    const toolMessage: ChatMessage = {
       role: 'tool',
       tool_call_id: id,
       content: JSON.stringify(result)
-    })
+    }
+
+    history.push(toolMessage)
   }
 
-  return 'Agent iteration limit reached'
+  throw new Error('Agent iteration limit reached')
 }

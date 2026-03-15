@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ai-devs
+    runtime: node
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AI_DEVS_API_KEY
+        sync: false

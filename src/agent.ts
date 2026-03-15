@@ -1,6 +1,11 @@
 import { callLLM } from './llm.js'
 import { tools } from './tools.js'
 import { ChatMessage } from './types.js'
+import {
+  validateToolArgs,
+  type CheckPackageParams,
+  type RedirectPackageParams
+} from './toolDefinitions.js'
 
 const MAX_STEPS = 5
 
@@ -30,27 +35,18 @@ export async function runAgent(
 
     const { id, name, arguments: args } = modelResponse
 
-    if (name === 'check_package') {
-      if (!args || typeof args.packageid !== 'string') {
-        throw new Error('Invalid arguments for check_package')
-      }
-    }
-
-    if (name === 'redirect_package') {
-      if (
-        !args ||
-        typeof args.packageid !== 'string' ||
-        typeof args.destination !== 'string' ||
-        typeof args.code !== 'string'
-      ) {
-        throw new Error('Invalid arguments for redirect_package')
-      }
-    }
-
-    const tool = tools[name as keyof typeof tools]
-
-    if (!tool) {
+    if (!(name in tools)) {
       throw new Error(`Unknown tool: ${name}`)
+    }
+
+    // Validate and parse arguments with Zod
+    let validatedArgs
+    try {
+      validatedArgs = validateToolArgs(name, args)
+    } catch (error) {
+      throw new Error(
+        `Invalid arguments for ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
     }
 
     const assistantToolCallMessage: ChatMessage = {
@@ -62,7 +58,7 @@ export async function runAgent(
           type: 'function',
           function: {
             name,
-            arguments: JSON.stringify(args)
+            arguments: JSON.stringify(validatedArgs)
           }
         }
       ]
@@ -70,7 +66,14 @@ export async function runAgent(
 
     history.push(assistantToolCallMessage)
 
-    const result = await tool(args)
+    let result: unknown
+    if (name === 'check_package') {
+      result = await tools.check_package(validatedArgs as CheckPackageParams)
+    } else if (name === 'redirect_package') {
+      result = await tools.redirect_package(validatedArgs as RedirectPackageParams)
+    } else {
+      throw new Error(`Unknown tool: ${name}`)
+    }
 
     const toolMessage: ChatMessage = {
       role: 'tool',

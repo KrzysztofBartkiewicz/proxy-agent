@@ -48,14 +48,10 @@ app.post('/', async (req, res) => {
   }
 })
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`)
-})
-
 app.get('/', (req, res) => {
   res.send('Server alive')
 })
 
-app.post('/', async (req, res) => {
-  console.log('Incoming request:', req.body)
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`)
 })

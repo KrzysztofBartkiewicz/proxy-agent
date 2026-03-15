@@ -2,17 +2,25 @@ const API_URL = 'https://hub.ag3nts.org/api/packages'
 const API_KEY = process.env.AI_DEVS_API_KEY
 
 export async function check_package(packageid: string) {
+  const payload = {
+    apikey: API_KEY,
+    action: 'check',
+    packageid
+  }
+
+  console.log('check_package payload:', JSON.stringify(payload))
+
   const res = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      apikey: API_KEY,
-      action: 'check',
-      packageid
-    })
+    body: JSON.stringify(payload)
   })
+
+  const text = await res.text()
+  console.log('check_package status:', res.status)
+  console.log('check_package body:', text)
 
   if (!res.ok) {
     throw new Error(`Packages API error: ${res.status}`)

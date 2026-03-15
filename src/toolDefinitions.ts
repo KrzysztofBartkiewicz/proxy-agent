@@ -1,6 +1,5 @@
 import { z } from 'zod'
 import { Tool } from '@modelcontextprotocol/sdk/types.js'
-import { zodToJsonSchema } from 'zod-to-json-schema'
 
 // Zod schemas for tool parameters
 export const CheckPackageSchema = z.object({
@@ -31,45 +30,92 @@ export const toolSpecs = {
   }
 } as const
 
-// Helper to convert Zod schema to JSON Schema
-function toJsonSchema(schema: any) {
-  return zodToJsonSchema(schema, { $refStrategy: 'none' })
-}
-
 // Convert to OpenRouter/OpenAI format
 export function getOpenAIToolDefinitions() {
   return [
     {
       type: 'function' as const,
       function: {
-        name: toolSpecs.check_package.name,
-        description: toolSpecs.check_package.description,
-        parameters: toJsonSchema(toolSpecs.check_package.schema)
+        name: 'check_package',
+        description: 'Checks current package status and location',
+        parameters: {
+          type: 'object' as const,
+          properties: {
+            packageid: {
+              type: 'string' as const,
+              description: 'Package ID'
+            }
+          },
+          required: ['packageid']
+        }
       }
     },
     {
       type: 'function' as const,
       function: {
-        name: toolSpecs.redirect_package.name,
-        description: toolSpecs.redirect_package.description,
-        parameters: toJsonSchema(toolSpecs.redirect_package.schema)
+        name: 'redirect_package',
+        description: 'Redirects package using authorization code',
+        parameters: {
+          type: 'object' as const,
+          properties: {
+            packageid: {
+              type: 'string' as const,
+              description: 'Package ID'
+            },
+            destination: {
+              type: 'string' as const,
+              description: 'Target destination code'
+            },
+            code: {
+              type: 'string' as const,
+              description: 'Authorization code provided by the operator'
+            }
+          },
+          required: ['packageid', 'destination', 'code']
+        }
       }
     }
   ]
 }
 
-// Convert to MCP format
+// Convert to MCP format (MCP can use Zod schemas directly)
 export function getMCPToolDefinitions(): Tool[] {
   return [
     {
-      name: toolSpecs.check_package.name,
-      description: toolSpecs.check_package.description,
-      inputSchema: toJsonSchema(toolSpecs.check_package.schema) as any
+      name: 'check_package',
+      description: 'Checks current package status and location',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          packageid: {
+            type: 'string',
+            description: 'Package ID'
+          }
+        },
+        required: ['packageid']
+      } as any
     },
     {
-      name: toolSpecs.redirect_package.name,
-      description: toolSpecs.redirect_package.description,
-      inputSchema: toJsonSchema(toolSpecs.redirect_package.schema) as any
+      name: 'redirect_package',
+      description: 'Redirects package using authorization code',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          packageid: {
+            type: 'string',
+            description: 'Package ID'
+          },
+          destination: {
+            type: 'string',
+            description: 'Target destination code'
+          },
+          code: {
+            type: 'string',
+            description: 'Authorization code provided by the operator'
+          }
+        },
+        required: ['packageid', 'destination', 'code']
+      } as any
     }
   ]
 }
